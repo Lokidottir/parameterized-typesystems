@@ -1,0 +1,47 @@
+name:                parameterized-typesystems
+version:             0.1.0.0
+synopsis:            Terms with a parameterized typesystem
+description:         Please see README.md
+license:             BSD3
+license-file:        LICENSE
+author:              Lokidottir
+maintainer:          ma302fh@gold.ac.uk
+homepage:            https://github.com/Lokidottir/typerbole
+bug-reports:         https://github.com/Lokidottir/typerbole/issues
+copyright:           2016 Lokidottir
+category:            Typesystems
+                   , Typechecking
+                   , AST
+build-type:          Simple
+cabal-version:       >=1.10
+extra-source-files:    README.md
+
+source-repository head
+  type:     git
+  location: https://github.com/Lokidottir/parameterized-typesystems
+
+library
+  hs-source-dirs:      src
+  exposed-modules:     Control.Typecheckable
+  build-depends:       base >= 4.7 && < 5
+                     , containers >= 0.5 && < 0.6
+                     , data-ordlist
+                     , either
+                     , semigroups
+                     , bifunctors >= 5
+                     , mtl
+                     , lens
+  -- ghc-options:         -Wall
+  --                      -fno-warn-type-defaults
+  --                      -fno-warn-unused-do-bind
+  default-language:    Haskell2010
+  default-extensions:  ScopedTypeVariables
+                     , LambdaCase
+                     , TemplateHaskell
+                     , DeriveGeneric
+                     , DeriveDataTypeable
+                     , TypeFamilies
+                     , QuasiQuotes
+                     , TypeOperators
+                     , MultiParamTypeClasses
+                     , FunctionalDependencies

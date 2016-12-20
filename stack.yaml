@@ -1,0 +1,9 @@
+
+resolver: lts-6.9
+
+packages:
+    - '.'
+
+flags: {}
+
+extra-package-dbs: []
