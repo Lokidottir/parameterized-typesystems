@@ -20,7 +20,7 @@ newtype TypecheckPure term t =
 
 -- | Pure typechecking class, makes explicit how pure typechecking computations
 -- are usually structured.
-class (Semigroup (TypeError term t)) => PureTypecheckable term t where
+class (Semigroup (TypeError term t), Functor term) => PureTypecheckable term t where
 
     -- | The associated type of typeerrors.
     type TypeError term t :: *
@@ -47,7 +47,7 @@ instance (  PureTypecheckable term t
                 return ty
             Failure err -> throwError err
 
-class (PureTypecheckable term t) => PureInferable term t where
+class (PureTypecheckable term t, Functor term) => PureInferable term t where
 
     inferP :: term (Maybe t)
            -> TypingContext term t
