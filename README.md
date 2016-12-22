@@ -21,7 +21,7 @@ data Type = UndeclaredType
 
 Operations such as typechecking and inference in this definition can be loosely defined as having the types `Term -> m Type` and `Term -> m Term`[1] respectively
 
-But we can type this better, and open up a lot of oppertunity if we pull out a specfic type AST from `Term` and replace it with a type variable, yeilding:
+But we can type this better, and open up a lot of opportunity if we pull out a specific type AST from `Term` and replace it with a type variable, yielding:
 
 ```haskell
 data Term t = Var String
@@ -41,7 +41,7 @@ data Type = TyVar String
           -- ...
 ```
 
-...and redefine typechecking as `Term t -> m t`, and inference to `Term (Maybe t) -> m (Term t)`. Not only this but we can definetypeclasses for both inference and typechecking:
+...and redefine typechecking as `Term t -> m t`, and inference to `Term (Maybe t) -> m (Term t)`. Not only this but we can define typeclasses for both inference and typechecking:
 
 ```haskell
 {-# LANGUAGE MultiParamTypeClasses #-}
