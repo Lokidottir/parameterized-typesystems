@@ -51,7 +51,7 @@ class Typecheckable term t m where
 
 class Inferable term t m where
 
-    infer :: term (Maybe t) -> m t
+    infer :: term (Maybe t) -> m (term t)
 ```
 
 ### Dependent types
