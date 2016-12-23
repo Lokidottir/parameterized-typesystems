@@ -13,45 +13,61 @@ import           Control.Monad.Except
 import           Data.Semigroup
 import           Data.Either.Validation
 
+-- | Pure typechecking class, makes explicit how pure typechecking computations can
+-- be structured, here mostly for illustrative purposes.
+class (Semigroup (TypeError term t), Functor term) => PureTypecheckable term t where
+
+    -- | The representation of type errors, i.e. @[`String`]@ or another datatype
+    -- that records the context of the type error.
+    type TypeError term t :: *
+
+    -- | The typing context, a state that can be refered to during typechecking
+    -- and updated if new information is gained from the expression.
+    type TypingContext term t :: *
+
+    {-|
+        Typecheck a term with an explicit typing context and error
+        reporting structures, returning either type errors or the type
+        of the term and an updated typing context.
+    -}
+    typecheckP :: term t
+               -> TypingContext term t
+               -> Validation (TypeError term t) (t, TypingContext term t)
+
+class (PureTypecheckable term t) => PureInferable term t where
+
+    {-|
+        Infer a term's types within the pure typechecking environment
+        specified for `PureTypecheckable`.
+
+        ===Behaviour
+            * Inherits all laws of `Inferable` with respect to the term whose types are inferred.
+    -}
+    inferP :: term (Maybe t)
+           -> TypingContext term t
+           -> Validation (TypeError term t) (term t, TypingContext term t)
+
+-- | A wrapper for embedding purely-typecheckable/inferable terms
+-- in potenentially non-pure typechecking environments
 newtype TypecheckPure term t =
     TypecheckPure {
         unwrapTypecheck :: term t
     } deriving (Eq, Ord, Show, Functor)
 
--- | Pure typechecking class, makes explicit how pure typechecking computations
--- are usually structured.
-class (Semigroup (TypeError term t), Functor term) => PureTypecheckable term t where
-
-    -- | The associated type of typeerrors.
-    type TypeError term t :: *
-
-    -- | The typing context, a state that can be refered to
-    type TypingContext term t :: *
-
-    typecheckP :: term t
-               -> TypingContext term t
-               -> Validation (TypeError term t) (t, TypingContext term t)
-
--- | All pure typechecking actions can be embedded in a monadic typechecker
--- which has corresponding error and state instances.
 instance (  PureTypecheckable term t
          ,  MonadError (TypeError term t) m
          ,  MonadState (TypingContext term t) m
          )
          => Typecheckable (TypecheckPure term) t m where
 
+    -- | All pure typechecking actions can be embedded in a monadic typechecker
+    -- which has corresponding error and state instances.
     typecheck term =
         gets (typecheckP (unwrapTypecheck term)) >>= \case
             Success (ty, tyctx) -> do
                 put tyctx
                 return ty
             Failure err -> throwError err
-
-class (PureTypecheckable term t, Functor term) => PureInferable term t where
-
-    inferP :: term (Maybe t)
-           -> TypingContext term t
-           -> Validation (TypeError term t) (term t, TypingContext term t)
 
 instance (  PureInferable term t
          ,  MonadError (TypeError term t) m
