@@ -65,7 +65,7 @@ class Inferable term t m where
 
 ### Higher-order types
 
-Higher-order typesystems have a notion of "Types of types" or ["Kinds"](https://en.wikipedia.org/wiki/Kind_(type_theory)), implies the types themselves need to be typechecked - or "kindchecked" -, so we could redefine `Type` again as follows:
+Higher-order typesystems have a notion of "Types of types" or ["Kinds"](https://en.wikipedia.org/wiki/Kind_(type_theory)), which implies the types themselves need to be typechecked - or "kindchecked" -, so we could redefine `Type` again as follows:
 
 ```haskell
 data Type k = TyVar String
@@ -84,8 +84,11 @@ We focus on the new definition of `Forall` as this assigns a Type's Kind `k` at 
 One option is to hack this together with the `Const` datatype:
 
 ```haskell
-
-data DepTerm = -- ... a definition of a dependently typed language ...
+data DepTerm t = Var String
+               | Con String
+               | Apply DepTerm DepTerm
+               | Lambda (String, DepTerm) DepTerm
+               | Pi (String, DepTerm) DepTerm
 
 data Const a b = Const a
 
@@ -103,34 +106,20 @@ One way we can get around this and maintain our gained properties is to use the 
 newtype Fix f = Fix { unfix :: (f (Fix f)) }
 ```
 
-This takes a functor and applies it to itself recursively, turning a type of `* -> *` into a type `*`. And now we can write our instance as:
+This takes a functor and applies it to itself recursively, turning a type of `* -> *` into a type `*`. And now we can write our instance as having a fixed point in it's typesystem:
 
 ```haskell
-data Leaf = Var String | Con String
-
-data DepTerm t = LeafTerm Leaf
+data DepTerm t = Var String
+               | Con String
                | Apply (DepTerm t) (DepTerm t)
-               | Lambda (String, t) (Depterm t)
+               | Lambda (String, t) (DepTerm t)
                | Pi (String, t) t
-               | Sigma (String t) t
 
-instance (MonadWhatever m) => Typecheckable Depterm (Fix DepTerm) m where
+instance (MonadWhatever m) => Typecheckable DepTerm (Fix DepTerm) m where
     -- ...
 ```
 
-We need to typecheck the dependent terms themselves, and we can
-
-<!--
-    Probably something about the fixed point functor? I'm not quite certain how
-    to represent this yet.
-
-    One idea is to have the typesystem for a dependent language parameterize the universe as well, and to recurse until the final used universe along the lines ofP
-
-    instance Typecheckable (DepLang n) (Fix (DepLang (Succ n))) where
-        ...
-
-    but that doesn't really work?
--->
+During typechecking we can unfurl `Fix DepTerm` to `DepTerm (Fix DepTerm)` and keep typechecking until we reach the end of the tree.
 
 ## Pure typechecking
 
