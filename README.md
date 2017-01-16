@@ -50,7 +50,7 @@ data Type = TyVar String
           -- ...
 ```
 
-...and redefine typechecking as `Term t -> m t`, and inference to `Term (Maybe t) -> m (Term t)`. Not only this but we can define typeclasses for both inference and typechecking:
+...and redefine typechecking as `Term t -> m t`, and inference to `Term (Maybe t) -> m (Term t)` (This isn't an orthordox definition as far as I can tell, see [A note on inference](#a-note-on-inference). Not only this but we can define typeclasses for both inference and typechecking:
 
 ```haskell
 {-# LANGUAGE MultiParamTypeClasses #-}
@@ -62,6 +62,7 @@ class Inferable term t m where
 
     infer :: term (Maybe t) -> m (term t)
 ```
+
 #### A note on inference.
 
 We discriminate between two kinds of inference, one that gives us the type of a fully type-annotated term, and another that "fills in" untyped gaps in unannotated types of a term. We regard the former as reasonable to expect to able to be derived from a fully-annotated term while checking it's correctness and the latter as an operation seperate from typechecking.
