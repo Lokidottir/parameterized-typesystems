@@ -62,6 +62,23 @@ class Inferable term t m where
 
     infer :: term (Maybe t) -> m (term t)
 ```
+#### A note on inference.
+
+We discriminate between two kinds of inference, one that gives us the type of a fully type-annotated term, and another that "fills in" untyped gaps in unannotated types of a term. We regard the former as reasonable to expect to able to be derived from a fully-annotated term while checking it's correctness and the latter as an operation seperate from typechecking.
+
+i.e.
+
+```
+typechecking derives  
+λ (a : Int) (b : Int). a + b
+has type
+Int -> Int -> Int
+
+while inference derives
+λ a b. a + b
+annotates as
+λ (a : Int) (b : Int). a + b
+```
 
 ### Higher-order types
 
@@ -97,8 +114,6 @@ instance (MonadWhatever m) => Typecheckable (Const DepTerm) DepTerm m where
 ```
 
 but this doesn't give us any more type safety or assertions of the properties of the syntax trees.
-
-#### Not Actually Tested Yet
 
 One way we can get around this and maintain our gained properties is to use the `Fix` (fixed-point) functor:
 

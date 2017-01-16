@@ -14,6 +14,7 @@ module Control.Typecheckable (
     -- * Typeclasses for Typechecking and Inference
       Typecheckable(..)
     , Inferable(..)
+    , Untyped
     , inferUntyped
     , inferenceLaw
 ) where
@@ -25,6 +26,9 @@ import Data.Functor
     monad\/action\/applicative @m@ that is used to access information needed to
     typecheck the term i.e. a state & error monad or a database accessing monad or
     if all the knowledge is available always it might be the identity monad.
+
+    Other typecheckers might need to access external solvers, @m@ can do more or
+    less anything as needed. It's not even enforced to be a monad.
 -}
 class (Functor term) => Typecheckable term t m where
 
@@ -52,8 +56,12 @@ class Functor term => Inferable term t m where
     -}
     infer :: term (Maybe t) -> m (term t)
 
+-- | Type alias for an untyped term, with it's parameterized
+-- typesystem being set as the unit type.
+type Untyped term = term ()
+
 -- | Given a completely untyped term, infer it's type.
-inferUntyped :: Inferable term t m => term () -> m (term t)
+inferUntyped :: Inferable term t m => Untyped term -> m (term t)
 inferUntyped term = infer (term $> Nothing)
 
 -- | A function that asserts the inference law of structure.
