@@ -1,12 +1,4 @@
-{-# LANGUAGE AllowAmbiguousTypes #-}
-{-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE LambdaCase #-}
-{-# LANGUAGE UndecidableInstances #-}
-{-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE ExistentialQuantification #-}
 {-|
     Module vaugely defining
 -}
@@ -51,6 +43,7 @@ class Functor term => Inferable term t m where
               Law: Structure of the term must remain unchanged
 
                 @
+                -- Inference law when `m` is a monad.
                 (infer term >>= \\termInfered -> return (term $> () == termInfered $> ())) == (infer term >> return True)
                 @
     -}
@@ -64,7 +57,7 @@ type Untyped term = term ()
 inferUntyped :: Inferable term t m => Untyped term -> m (term t)
 inferUntyped term = infer (term $> Nothing)
 
--- | A function that asserts the inference law of structure.
+-- | Assertion of `infer`'s structure-preserving law when `m` is a monad.
 inferenceLaw :: (Monad m, Eq (term ()), Inferable term t m) => term (Maybe t) -> m Bool
 inferenceLaw term = do
     termInfered <- infer term
