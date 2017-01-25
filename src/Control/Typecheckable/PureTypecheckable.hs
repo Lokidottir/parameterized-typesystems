@@ -11,7 +11,6 @@ import           Control.Typecheckable
 import           Control.Monad.State.Class
 import           Control.Monad.Except
 import           Data.Semigroup
-import           Data.Either.Validation
 
 -- | Pure typechecking class, makes explicit how pure typechecking computations can
 -- be structured, here mostly for illustrative purposes.
@@ -32,7 +31,7 @@ class (Semigroup (TypeError term t), Functor term) => PureTypecheckable term t w
     -}
     typecheckP :: term t
                -> TypingContext term t
-               -> Validation (TypeError term t) (t, TypingContext term t)
+               -> Either (TypeError term t) (t, TypingContext term t)
 
 class (PureTypecheckable term t) => PureInferable term t where
 
@@ -45,7 +44,7 @@ class (PureTypecheckable term t) => PureInferable term t where
     -}
     inferP :: term (Maybe t)
            -> TypingContext term t
-           -> Validation (TypeError term t) (term t, TypingContext term t)
+           -> Either (TypeError term t) (term t, TypingContext term t)
 
 -- | A wrapper for embedding purely-typecheckable/inferable terms
 -- in potenentially non-pure typechecking environments
@@ -64,10 +63,10 @@ instance (  PureTypecheckable term t
     -- which has corresponding error and state instances.
     typecheck term =
         gets (typecheckP (unwrapTypecheck term)) >>= \case
-            Success (ty, tyctx) -> do
+            Right (ty, tyctx) -> do
                 put tyctx
                 return ty
-            Failure err -> throwError err
+            Left err -> throwError err
 
 instance (  PureInferable term t
          ,  MonadError (TypeError term t) m
@@ -77,7 +76,7 @@ instance (  PureInferable term t
 
     infer term =
         gets (inferP (unwrapTypecheck term)) >>= \case
-            Success (tyterm, tyctx) -> do
+            Right (tyterm, tyctx) -> do
                 put tyctx
                 return (TypecheckPure tyterm)
-            Failure err -> throwError err
+            Left err -> throwError err
