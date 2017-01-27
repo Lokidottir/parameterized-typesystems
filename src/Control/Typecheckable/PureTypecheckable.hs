@@ -33,7 +33,15 @@ class (Semigroup (TypeError term t), Functor term) => PureTypecheckable term t w
                -> TypingContext term t
                -> Either (TypeError term t) (t, TypingContext term t)
 
-class (PureTypecheckable term t) => PureInferable term t where
+class (Semigroup (InferError term t), Functor term) => PureInferable term t where
+
+    -- | Representation of errors that occur during inference, analogous to
+    -- `TypeError` in it's function.
+    type InferError term t :: *
+
+    -- | The context needed to infer the types of a term, analogous to `TypingContext`
+    -- in it's function.
+    type InferContext term t :: *
 
     {-|
         Infer a term's types within the pure typechecking environment
@@ -43,8 +51,8 @@ class (PureTypecheckable term t) => PureInferable term t where
             * Inherits all laws of `Inferable` with respect to the term whose types are inferred.
     -}
     inferP :: term (Maybe t)
-           -> TypingContext term t
-           -> Either (TypeError term t) (term t, TypingContext term t)
+           -> InferContext term t
+           -> Either (InferError term t) (term t, InferContext term t)
 
 -- | A wrapper for embedding purely-typecheckable/inferable terms
 -- in potenentially non-pure typechecking environments
@@ -69,14 +77,14 @@ instance (  PureTypecheckable term t
             Left err -> throwError err
 
 instance (  PureInferable term t
-         ,  MonadError (TypeError term t) m
-         ,  MonadState (TypingContext term t) m
+         ,  MonadError (InferError term t) m
+         ,  MonadState (InferContext term t) m
          )
          => Inferable (TypecheckPure term) t m where
 
     infer term =
         gets (inferP (unwrapTypecheck term)) >>= \case
-            Right (tyterm, tyctx) -> do
-                put tyctx
+            Right (tyterm, inferctx) -> do
+                put inferctx
                 return (TypecheckPure tyterm)
             Left err -> throwError err
