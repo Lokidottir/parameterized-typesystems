@@ -1,6 +1,6 @@
 # Parameterized typesystems
 
-A library exposing typeclasses for typechecking terms parametrized in their
+A library exposing typeclasses for typechecking terms parametrized in their typesystem.
 
 ## Languages & their typesystems
 
