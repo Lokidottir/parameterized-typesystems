@@ -1,19 +1,23 @@
 # Parameterized typesystems
 
+A library exposing typeclasses for typechecking terms parametrized in their
+
 ## Languages & their typesystems
 
-We can imagine many typed languages in two parts: their expressions/terms and their typesystems:
+Many typed languages written in haskell come in two parts (examples here may be vastly simplified):
 
 ```haskell
 data Term = Var String
+          -- ^ A variable
           | Con String
+          -- ^ A term constant, i.e. @Nothing@ or @10@
           | Apply Term Term
-          | Lambda (String, Type) Term
+          -- ^ Application of two terms i.e. @id f@
+          | Lambda (String, Maybe Type) Term
+          -- ^ A lambda abstraction, with a possibly-undefined type
           -- ...
 
-data Type = UndeclaredType
-          -- ^ No type specified, we need to infer
-          | TyVar String
+data Type = TyVar String
           -- ^ A type variable
           | TyCon String
           -- ^ A type constant (@Int@, @Set@, etc.)
@@ -70,7 +74,7 @@ We discriminate between two kinds of inference, one that gives us the type of a 
 i.e.
 
 ```
-typechecking derives  
+typechecking derives
 λ (a : Int) (b : Int). a + b
 has type
 Int -> Int -> Int
@@ -95,6 +99,24 @@ data Type k = TyVar String
 
 We focus on the new definition of `Forall` as this assigns a Type's Kind `k` at a type variable's quantification, essentially having the same purpose as `Term t`'s assigning of a type to a variable in a lambda abstraction for variables in the following term.
 
+We can also introduce another data structure for Kinds:
+
+```haskell
+data Kind = Star
+          | KindFunction Kind Kind
+          -- ...
+```
+
+And define a `Typecheckable` instance for `Type k`.
+
+```haskell
+instance (...) => Typecheckable Type Kind m where
+    -- ...
+
+instance (...) => Inferable Type Kind m where
+    -- ...
+```
+
 ### Dependent types
 
 [Dependent typesystems](https://en.wikipedia.org/wiki/Dependent_type) are a different story, as _everything_ is a type (including functions, strings, lambda abstractions). So parameterizing the types involves parameterizing the term itself as it's own typesystem.
@@ -110,7 +132,7 @@ data DepTerm t = Var String
 
 data Const a b = Const a
 
-instance (MonadWhatever m) => Typecheckable (Const DepTerm) DepTerm m where
+instance (...) => Typecheckable (Const DepTerm) DepTerm m where
     -- ...  
 ```
 
@@ -119,24 +141,27 @@ but this doesn't give us any more type safety or assertions of the properties of
 One way we can get around this and maintain our gained properties is to use the `Fix` (fixed-point) functor:
 
 ```haskell
-newtype Fix f = Fix { unfix :: (f (Fix f)) }
+newtype Fix f = Fix { unfix :: f (Fix f) }
 ```
 
 This takes a functor and applies it to itself recursively, turning a type of `* -> *` into a type `*`. And now we can write our instance as having a fixed point in it's typesystem:
 
 ```haskell
+-- We say that dependently-typed terms are `Fixed-point` in their types.
 data DepTerm t = Var String
                | Con String
                | Apply (DepTerm t) (DepTerm t)
                | Lambda (String, t) (DepTerm t)
                | Pi (String, t) t
+               -- ^ We changed pi-types to show that they quantify over a type!
 
-instance (MonadWhatever m) => Typecheckable DepTerm (Fix DepTerm) m where
+instance (...) => Typecheckable DepTerm (Fix DepTerm) m where
     -- ...
 ```
 
 During typechecking we can unfurl `Fix DepTerm` to `DepTerm (Fix DepTerm)` and keep typechecking until we reach the end of the tree.
 
+<!--
 ## Pure typechecking
 
 Pure typechecking systems can be explicitly defined as having a method to report type errors and a typing context state. This can be defined explicitly in another typeclass:
@@ -159,8 +184,8 @@ class (PureTypecheckable term t) => PureInferable term t where
 
     inferP :: term (Maybe t) -> TypingContext term t -> Validation (TypeError term t) (term t, TypingContext term t)
 ```
-
-## `Typecheckable` for language components
+-->
+## `Typecheckable` for other language components
 
 We can expand the use of these typeclasses beyond pure ASTs and associated typesystems to other language components such as type & typeclass declarations in haskell/ML-style languages, building up to whole module representations being instances of `Typecheckable`.
 
