@@ -185,12 +185,6 @@ class (PureTypecheckable term t) => PureInferable term t where
     inferP :: term (Maybe t) -> TypingContext term t -> Validation (TypeError term t) (term t, TypingContext term t)
 ```
 -->
-## `Typecheckable` for other language components
-
-We can expand the use of these typeclasses beyond pure ASTs and associated typesystems to other language components such as type & typeclass declarations in haskell/ML-style languages, building up to whole module representations being instances of `Typecheckable`.
-
-```haskell
-```
 
 ***
 
