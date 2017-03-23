@@ -43,16 +43,6 @@ data Term t = Var String
             -- ...
 ```
 
-Then simplify the `Type` datatype slightly:
-
-```haskell
-data Type = TyVar String
-          | TyCon String
-          | TyApply Type Type
-          | Function Type Type
-          | Forall String Type
-          -- ...
-```
 
 ...and redefine typechecking as `Term t -> m t`, and inference to `Term (Maybe t) -> m (Term t)` (This isn't an orthordox definition as far as I can tell, see [A note on inference](#a-note-on-inference). Not only this but we can define typeclasses for both inference and typechecking:
 
